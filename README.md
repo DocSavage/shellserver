@@ -30,7 +30,7 @@ If you aren't a Go developer, this will suffice:
 If you aren't on 64-bit Mac, copy the appropriate executable for your platform:
 
     % rm shellserver
-    % cp bin/linux_amd64/shellserver . 
+    % cp bin/0.1/linux_amd64/shellserver . 
 
 Run the server.  By default this will use the git working directory as both the
 presentation files directory and the shellserver directory.
@@ -41,14 +41,20 @@ Now you are ready to try the included demos.
 
 ### See reveal.js presentation
 
-Point your web browser to [localhost:6789/revealjs.html](http://localhost:6789/revealjs.html)
+Point your web browser to [localhost:6789/reveal.html](http://localhost:6789/reveal.html)
 to see the basic reveal.js template.  (Only slightly modified to add 'reveal.js/' to
 the relative paths in the html file.)
 
 ### See Google I/O 2012 slide template
 
 Point your web browser to [localhost:6789/google-io.html](http://localhost:6789/google-io.html)
-to see the basic reveal.js template.  (Only slightly modified to add 'google-io/' to
+to see the basic Google I/O template.  (Only slightly modified to add 'google-io/' to
+the relative paths in the html file.)
+
+### See impress.js presentation
+
+Point your web browser to [localhost:6789/impress.html](http://localhost:6789/impress.html)
+to see the basic impress.js template.  (Only slightly modified to add 'impress.js/' to
 the relative paths in the html file.)
 
 ## Go Developers

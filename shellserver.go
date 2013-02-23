@@ -71,7 +71,10 @@ func serveHttp(address string) {
 	http.HandleFunc("/google-io/", frameworkHandler)
 	http.HandleFunc("/shellserver/", shellHandler)
 	http.HandleFunc("/", mainHandler)
-	src.ListenAndServe()
+	err := src.ListenAndServe()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
 // Handler for all non-presentation files

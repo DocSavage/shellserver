@@ -1,4 +1,4 @@
-shellserver downloads (unknown)
+shellserver downloads (0.1)
 ------------
 
  * [darwin 386](darwin_386/shellserver)
