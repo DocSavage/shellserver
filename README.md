@@ -5,14 +5,16 @@ Simple presentation server for HTML-based tools like reveal.js and Google I/O sl
 
 ## Approach
 
-There are a lot of nice HTML-based presentation tools out there.  This is a simple tool 
-that lets you separate your tool-specific HTML presentation files and a git repo with 
-a web server and git submodules for each presentation tool library.
+There are a lot of nice HTML-based presentation tools out there.  The shellserver system 
+cleanly separates your tool-specific HTML presentation files from a git repo with 
+a web server and git submodules for presentation tool libraries.  It should allow easy
+hacking on the server to allow proxying commands (e.g., using an embedded HTML terminal)
+to your shell.
 
 Author your presentation HTML file for a particular tool, e.g., reveal.js.  Where you would
 use relative paths that call "css", "lib", and "js" directory files, add a "reveal.js/" 
-prefix.  Then run "shellserver --present=/dir/with/presentation.html" and surf to
-"localhost:6789/presentation.html" and you should be seeing your reveal.js presentation.
+prefix.  Then run "shellserver --present=/dir/with/my_talk.html" and surf to
+"localhost:6789/my_talk.html" and you should be seeing your reveal.js presentation.
 (This assumes you are running shellserver from the working directory.  If not, you
 can manually set the shellserver working directory using the --shellserver=/path/to/repo.)
 
@@ -22,8 +24,20 @@ If you aren't a Go developer, this will suffice:
 
     % git clone https://github.com/DocSavage/shellserver.git
     % cd shellserver
-    % cp bin/darwin_amd64/shellserver .  (or copy the appropriate executable for your platform)
+    % git submodule init     # These two commands will pull all presentation libraries
+    % git submodule update
+
+If you aren't on 64-bit Mac, copy the appropriate executable for your platform:
+
+    % rm shellserver
+    % cp bin/linux_amd64/shellserver . 
+
+Run the server.  By default this will use the git working directory as both the
+presentation files directory and the shellserver directory.
+
     % ./shellserver
+
+Now you are ready to try the included demos.
 
 ### See reveal.js presentation
 
