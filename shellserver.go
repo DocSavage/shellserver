@@ -14,8 +14,10 @@ import (
 var showHelp bool
 var showHelp2 bool
 var port string
+
 var presentDir string
 var shellserverDir string
+var shellDir string
 
 const shellHtml = "shellserver.html"
 
@@ -43,6 +45,8 @@ func init() {
 		"Directory that holds presentation HTML")
 	flag.StringVar(&shellserverDir, "shellserver", currentDir,
 		"The shellserver working directory")
+	flag.StringVar(&shellDir, "cd", currentDir,
+		"Directory for running shell commands")
 }
 
 func main() {
@@ -139,13 +143,13 @@ func proxyCommand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Do the command
-	fmt.Printf("Passing in arguments: %s\n", fullArgs)
-	out, err := exec.Command(fullArgs[0], fullArgs[1:]...).Output()
+	cmd := exec.Command(fullArgs[0], fullArgs[1:]...)
+	cmd.Dir = shellDir
+	out, err := cmd.Output()
 	if err != nil {
 		fmt.Println("Error: ", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else {
-		fmt.Println("Output: ", string(out))
 		fmt.Fprintln(w, string(out))
 	}
 }
