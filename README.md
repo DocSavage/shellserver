@@ -60,7 +60,7 @@ the relative paths in the html file.)
 ## Go Developers
 
 There's only one small file, shellserver.go, and it's cross-compiled with 
-[goxc](http://www.laher.net.nz/goxc/) but has only been passed testing with 64-bit Mac.
+[goxc](http://www.laher.net.nz/goxc/) but has only passed testing with 64-bit Mac.
 
 ## TODO
 

@@ -1,0 +1,250 @@
+<html>
+<head>
+	<title>ShellServer Terminal Page</title>
+	<script language="JavaScript" type="text/javascript" src="/termlib/termlib.js"></script>
+
+<script type="text/javascript">
+<!--
+
+// *** request sample ***
+// mass:werk, N.Landsteiner 2007
+
+var term;
+
+var help = [
+	'Commands are proxied via the presentation server, so you',
+	'can treat this like a normal shell.',
+	' '
+];
+
+function getParameterByName(name)
+{
+  	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+  	var regexS = "[\\?&]" + name + "=([^&#]*)";
+  	var regex = new RegExp(regexS);
+  	var results = regex.exec(window.location.search);
+  	if (results == null)
+    	return "";
+  	else
+    	return decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
+function termOpen() {
+	if ((!term) || (term.closed)) {
+		var reqRows = getParameterByName('rows');
+		var nRows = 21;
+		if (reqRows != "")
+			nRows = parseInt(reqRows);
+		term = new Terminal(
+			{
+				x: 0,
+				y: 0,
+				cols: 80,
+				rows: nRows,
+				termDiv: 'termDiv',
+				bgColor: '#ffffff',
+				frameColor: '#ffffff',
+				greeting: '',
+				handler: termHandler,
+				exitHandler: termExitHandler
+			}
+		);
+		term.open();
+		
+		// dimm UI text
+		var mainPane = (document.getElementById)?
+			document.getElementById('mainPane') : document.all.mainPane;
+		if (mainPane) mainPane.className = 'lh15 dimmed';
+	}
+}
+
+function termExitHandler() {
+	// reset the UI
+	var mainPane = (document.getElementById)?
+		document.getElementById('mainPane') : document.all.mainPane;
+	if (mainPane) mainPane.className = 'lh15';
+}
+
+function pasteCommand(text) {
+	// insert given text into the command line and execute
+	var termRef = TermGlobals.activeTerm;
+	if ((!termRef) || (termRef.closed)) {
+		alert('Please open the terminal first.');
+		return;
+	}
+	if ((TermGlobals.keylock) || (termRef.lock)) return;
+	termRef.cursorOff();
+	termRef._clearLine();
+	for (var i=0; i<text.length; i++) {
+		TermGlobals.keyHandler({which: text.charCodeAt(i), _remapped:true});
+	}
+	TermGlobals.keyHandler({which: termKey.CR, _remapped:true});
+}
+
+function termHandler() {
+	this.newLine();
+	
+	this.lineBuffer = this.lineBuffer.replace(/^\s+/, '');
+	var argv = this.lineBuffer.split(/\s+/);
+	var cmd = argv[0];
+	
+	switch (cmd) {
+		case 'get':
+			if (argv[1] == '-e') {
+				// option -e
+				if (argv.length >= 3) {
+					this.send(
+						{
+							url: argv[2],
+							method: 'get',
+							callback: myServerCallback,
+							getHeaders: ['Content-Type', 'Content-Length']
+						}
+					);
+					return;
+				}
+			}
+			else if (argv.length >= 2) {
+				// use default request-callback
+				this.send(
+					{
+						url: argv[1],
+						method: 'get'
+					}
+				);
+				return;
+			}
+			this.write('Usage: send [-e] filename');
+			break;
+
+		case 'help':
+			this.clear();
+			this.write(help);
+			break;
+
+		case 'exit':
+			this.close();
+			return;
+
+		default:
+			if (this.lineBuffer != '') {
+				this.type('You typed: ' + this.lineBuffer);
+				this.newLine();
+			}
+	}
+	this.prompt();
+}
+
+function myServerCallback() {
+	var response=this.socket;
+	if (response.success) {
+		var func=null;
+		try {
+			func=eval(response.responseText);
+		}
+		catch (e) {
+		}
+		if (typeof func=='function') {
+			try {
+				func.apply(this);
+			}
+			catch(e) {
+				this.write('An error occured within the imported function: '+e);
+			}
+		}
+		else {
+			this.write('Server Response:\n' + response.responseText);
+		}
+		this.newLine();
+		this.write('Response Statistics:');
+		this.newLine();
+		this.write('  Content-Type: ' + response.headers.contentType);
+		this.newLine();
+		this.write('  Content-Length: ' + response.headers.contentLength);
+	}
+	else {
+		var s='Request failed: ' + response.status + ' ' + response.statusText;
+		if (response.errno) s +=  '\n' + response.errstring;
+		this.write(s);
+	}
+	this.prompt();
+}
+
+//-->
+</script>
+
+<style type="text/css">
+.lh15 {
+	line-height: 15px;
+}
+
+.term {
+	font-family: "Courier New",courier,fixed,monospace;
+	font-size: 16px;
+	font-weight: bold;
+	color: #000000;
+	background: none;
+	letter-spacing: 1px;
+}
+.term .termReverse {
+	color: #232e45;
+	background: #95a9d5;
+}
+
+a,a:link,a:visited {
+	text-decoration: none;
+	color: #77dd11;
+}
+a:hover {
+	text-decoration: underline;
+	color: #77dd11;
+}
+a:active {
+	text-decoration: underline;
+	color: #eeeeee;
+}
+
+a.termopen,a.termopen:link,a.termopen:visited {
+	text-decoration: none;
+	color: #77dd11;
+	background: none;
+}
+a.termopen:hover {
+	text-decoration: none;
+	color: #222222;
+	background: #77dd11;
+}
+a.termopen:active {
+	text-decoration: none;
+	color: #222222;
+	background: #eeeeee;
+}
+
+table.inventory td {
+	padding-bottom: 20px !important;
+}
+
+tt,pre {
+	font-family: courier,fixed,monospace;
+	color: #ccffaa;
+	font-size: 12px;
+	line-height: 15px;
+}
+
+li {
+	line-height: 15px;
+	margin-bottom: 8px !important;
+}
+
+.dimmed,.dimmed *,.dimmed * * {
+	background-color: #222222 !important;
+	color: #333333 !important;
+}
+
+</style>
+</head>
+
+
+<body onload="termOpen()" scroll="no">
+	<div id="termDiv"></div>
+</body>
