@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -110,9 +111,53 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filename)
 }
 
+// Get a command from POST, parse any query strings that establish
+// path or environment variables, execute command and return result.
+// Also supports GLOB names like "*.png".
+func proxyCommand(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	command := r.FormValue("command")
+	args := strings.Split(command, " ")
+	if len(args) == 0 {
+		fmt.Printf("Bad command (%s)\n", command)
+		http.Error(w, "No command given!", http.StatusBadRequest)
+		return
+	}
+	// Expand any arguments with wildcard.
+	fullArgs := []string{}
+	for _, arg := range args {
+		if strings.Contains(arg, "*") {
+			matches, err := filepath.Glob(arg)
+			if err != nil {
+				fmt.Printf("Can't parse glob: %s [%s]\n", arg, err.Error())
+			} else {
+				fullArgs = append(fullArgs, matches...)
+			}
+		} else {
+			fullArgs = append(fullArgs, arg)
+		}
+	}
+
+	// Do the command
+	fmt.Printf("Passing in arguments: %s\n", fullArgs)
+	out, err := exec.Command(fullArgs[0], fullArgs[1:]...).Output()
+	if err != nil {
+		fmt.Println("Error: ", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	} else {
+		fmt.Println("Output: ", string(out))
+		fmt.Fprintln(w, string(out))
+	}
+}
+
 // Handler for API commands through HTTP
 func shellHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("shell request: %s\n", r.URL)
-	filename := filepath.Join(shellserverDir, shellHtml)
-	http.ServeFile(w, r, filename)
+	if r.Method == "GET" {
+		filename := filepath.Join(shellserverDir, shellHtml)
+		http.ServeFile(w, r, filename)
+	} else if r.Method == "POST" {
+		proxyCommand(w, r)
+	} else {
+		fmt.Fprintln(w, "Got bad command request for shell, not GET or POST!")
+	}
 }
