@@ -58,6 +58,10 @@ func main() {
 		fmt.Println("\nOptions:")
 		flag.PrintDefaults()
 	} else {
+		err := os.Chdir(shellDir)
+		if err != nil {
+			fmt.Println("Error trying to change working directory to:", shellDir)
+		}
 		serveHttp("localhost:" + port)
 	}
 }
@@ -122,9 +126,24 @@ func proxyCommand(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.FormValue("command")
 	args := strings.Split(command, " ")
+
 	if len(args) == 0 {
-		fmt.Printf("Bad command (%s)\n", command)
-		http.Error(w, "No command given!", http.StatusBadRequest)
+		fmt.Fprintf(w, "Bad command (%s)\n", command)
+		return
+	}
+	// If this is "cd", then change working directory.
+	if args[0] == "cd" {
+		if len(args) < 2 {
+			fmt.Fprintln(w, "'cd' must be followed with new directory!")
+		} else {
+			err := os.Chdir(args[1])
+			if err != nil {
+				fmt.Fprintln(w, err.Error())
+			} else {
+				fmt.Fprintln(w, "Switched directory to", args[1])
+			}
+			shellDir = args[1]
+		}
 		return
 	}
 	// Expand any arguments with wildcard.
@@ -142,13 +161,27 @@ func proxyCommand(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Check for "&" at end to signify asynchronous command like server starts.
+	lastArg := len(fullArgs) - 1
+	runBackground := false
+	if fullArgs[lastArg] == "&" {
+		runBackground = true
+		fullArgs = fullArgs[:lastArg]
+	}
+
 	// Do the command
 	cmd := exec.Command(fullArgs[0], fullArgs[1:]...)
-	cmd.Dir = shellDir
-	out, err := cmd.Output()
+	var out []byte
+	var err error
+	if runBackground {
+		err = cmd.Start()
+		out = []byte(fmt.Sprintf("Ran background job: %s\n", command))
+	} else {
+		out, err = cmd.Output()
+	}
 	if err != nil {
 		fmt.Println("Error: ", err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		fmt.Fprintln(w, err.Error())
 	} else {
 		fmt.Fprintln(w, string(out))
 	}

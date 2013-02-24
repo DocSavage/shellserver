@@ -114,8 +114,8 @@ function myServerCallback() {
 	}
 	else {
 		var s='Request failed: ' + response.status + ' ' + response.statusText;
-		if (response.errno) s +=  '\n' + response.errstring;
-		console.log(s);
+		if (response.errno) s += '\n' + response.errstring;
+		this.write(s);
 	}
 	this.prompt();
 }
