@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -68,7 +69,8 @@ func serveHttp(address string) {
 	}
 
 	http.HandleFunc("/reveal.js/", frameworkHandler)
-	http.HandleFunc("/google-io/", frameworkHandler)
+	http.HandleFunc("/impress.js/", frameworkHandler)
+	http.HandleFunc("/google-io/", googleioHandler)
 	http.HandleFunc("/shellserver/", shellHandler)
 	http.HandleFunc("/", mainHandler)
 	err := src.ListenAndServe()
@@ -80,6 +82,19 @@ func serveHttp(address string) {
 // Handler for all non-presentation files
 func frameworkHandler(w http.ResponseWriter, r *http.Request) {
 	filename := filepath.Join(shellserverDir, r.URL.Path)
+	http.ServeFile(w, r, filename)
+}
+
+// Handler for Google I/O template presentation files
+func googleioHandler(w http.ResponseWriter, r *http.Request) {
+	var filename string
+	if strings.HasPrefix(r.URL.Path, "/google-io/slide_config.js") ||
+		strings.HasPrefix(r.URL.Path, "/google-io/theme/") {
+
+		filename = filepath.Join(presentDir, r.URL.Path)
+	} else {
+		filename = filepath.Join(shellserverDir, r.URL.Path)
+	}
 	http.ServeFile(w, r, filename)
 }
 
