@@ -109,7 +109,8 @@ function termHandler() {
 function myServerCallback() {
 	var response=this.socket;
 	if (response.success) {
-		this.write(response.responseText);
+		this.write(response.responseText, true);
+		return;
 	}
 	else {
 		var s='Request failed: ' + response.status + ' ' + response.statusText;
