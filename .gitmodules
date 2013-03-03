@@ -1,9 +1,6 @@
 [submodule "reveal.js"]
 	path = reveal.js
 	url = https://github.com/hakimel/reveal.js.git
-[submodule "google-io"]
-	path = google-io
-	url = https://code.google.com/p/io-2012-slides
 [submodule "impress.js"]
 	path = impress.js
 	url = https://github.com/bartaz/impress.js.git

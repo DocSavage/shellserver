@@ -1,7 +1,9 @@
 shellserver
 ===========
 
-Simple presentation server for HTML-based tools like reveal.js and Google I/O slide templates.  Packages html terminal, web server, and shell proxy.
+Simple file and terminal proxy server for HTML-based preentation tools.  The shellserver
+system comes equipped with support for reveal.js, impress.js, and Google I/O 2012 template
+slides.  An example template file for each is available at the root directory..
 
 ## Approach
 
@@ -57,13 +59,22 @@ Point your web browser to [localhost:6789/impress.html](http://localhost:6789/im
 to see the basic impress.js template.  (Only slightly modified to add 'impress.js/' to
 the relative paths in the html file.)
 
+## In-slide terminal support
+
+shellserver supports an in-slide terminal that proxies commands (after hitting enter) to
+the Go server, which then executes the command and returns the results.  Background
+commands are supported using the "&" ending.  Also, the "cd /path/to/dir" command works
+by changing the terminal's current working directory.
+
 ## Go Developers
 
 There's only one small file, shellserver.go, and it's cross-compiled with 
 [goxc](http://www.laher.net.nz/goxc/) but has only passed testing with 64-bit Mac.
+64-bit Fedora 16 works fine if you do a "go build shellserver.go" at the Linux
+prompt.  (Cross-compilation with goxc doesn't seem to work.)
 
 ## TODO
 
-* Add presentation terminal that proxies commands out to server, which actually runs and
-returns the results.
+* <del>Add presentation terminal that proxies commands out to server, which actually runs and
+returns the results.</del>
 * Add Go in-presentation compilation and execution like [play.golang.org](http://play.golang.org).
