@@ -10,6 +10,9 @@
 // mass:werk, N.Landsteiner 2007
 
 var term;
+var websocket;
+var promptId;
+var textResponse = '';
 
 var help = [
 	'Commands are proxied via the presentation server, so you',
@@ -53,6 +56,26 @@ function termOpen() {
 		);
 		term.open();
 		
+		// Open a WebSocket
+		var parts = window.location.href.split('//')[1];
+		var address = 'ws://' + parts.split('/')[0] + '/socket/';
+		console.log("Attempting to open websocket to ", 
+			address, "...");
+		websocket = new WebSocket(address);
+		websocket.onmessage = function (event) {
+		    console.log("onmessage got: "+event.data);
+		    textResponse += event.data;
+		    if (promptId) {
+    		    clearTimeout(promptId);
+		    }
+		    promptId = setTimeout(function(){ 
+		        term.write(textResponse, true);
+		        promptId = null;
+		        textResponse = '';
+		    }, 100);
+		}        
+		websocket.onclose = websocketClose;
+		
 		// dimm UI text
 		var mainPane = (document.getElementById)?
 			document.getElementById('mainPane') : document.all.mainPane;
@@ -61,6 +84,7 @@ function termOpen() {
 }
 
 function termExitHandler() {
+    console.log("termExitHandler()\n");
 	// reset the UI
 	var mainPane = (document.getElementById)?
 		document.getElementById('mainPane') : document.all.mainPane;
@@ -84,40 +108,22 @@ function pasteCommand(text) {
 }
 
 function termHandler() {
+    console.log("termHandler()\n");
 	this.newLine();
 	
 	this.lineBuffer = this.lineBuffer.replace(/^\s+/, '');
 	var argv = this.lineBuffer.split(/\s+/);
 	if (argv.length >= 1) {
-		var address = window.location.href.split('?')[0]
-		console.log("Attempting to POST command to ", 
-			address, "...");
-		this.send({
-			url: address,
-			method: 'post',
-			data: {
-				command: this.lineBuffer
-			},
-			callback: myServerCallback,
-			getHeaders: ['Content-Type', 'Content-Length']
-		});
+	    console.log('sending: ' + this.lineBuffer);
+	    websocket.send(this.lineBuffer+"\n");
 		return;
 	}
-	this.prompt();
+	//this.prompt();
 }
 
-function myServerCallback() {
-	var response=this.socket;
-	if (response.success) {
-		this.write(response.responseText, true);
-		return;
-	}
-	else {
-		var s='Request failed: ' + response.status + ' ' + response.statusText;
-		if (response.errno) s += '\n' + response.errstring;
-		this.write(s);
-	}
-	this.prompt();
+function websocketClose() {
+    console.log("WebSocket closing!\n");
+    websocket.close();
 }
 
 //-->
