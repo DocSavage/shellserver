@@ -70,15 +70,14 @@ func (c *command) close() {
  
 func (c *command) reader() {
 	bufreader := bufio.NewReader(c.stdout)
+	buf := make([]byte, 0, 10000)
 	for {
-		message, err := bufreader.ReadString('\n')
-		//var message string
-		//_, err := fmt.Fscanf(c.stdout, "%s\n", &message)
+		n, err := bufreader.Read(buf)
 		if err != nil {
 			fmt.Println("command reader() error:", err.Error())
 			break
 		}
-		//message = strings.TrimSpace(message)
+		message = strings.TrimSpace(string(buffer))
 		fmt.Println("Received data from command:", message)
 		h.broadcast <- message
 	}
